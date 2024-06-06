@@ -8,67 +8,43 @@ class SimulationReport:
         self.failures_log = failures_log
         self.optimization_log = optimization_log
 
-    def generate_report(self):
-        project_data = []
-        resources_data = []
-        phases_data = []
-        failures_data = []
-        optimization_data = []
+    def table9_report_on_project_completion_times(self):
+        pre_optimization_project_df = self.projects_log[self.projects_log['Stage'] == 'pre-optimization']
+        pre_optimization_duration_stats_by_scale = pre_optimization_project_df.groupby('Project Scale')['Duration'].agg(['min', 'max', 'mean'])
+        print("Pre-Optimization Project Duration Statistics by Project Scale:")
+        print(pre_optimization_duration_stats_by_scale)
+        pre_optimization_duration_stats_by_scale.to_csv("table9a_report_on_project_completion_times.csv", header=True)
 
-        for activity in self.optimization_log:
-            optimization_data.append([
-                activity.stage, activity.phase, activity.mean_wait_time, activity.iteration, activity.original_resource_value, activity.resource_value
-            ])
+        pre_optimization_duration_stats = pre_optimization_project_df['Duration'].agg(['min', 'max', 'mean'])
+        print("Pre-Optimization Project Duration Statistics Across All Project Scales:")
+        print(pre_optimization_duration_stats)
+        pre_optimization_duration_stats.to_csv("table9b_report_on_project_completion_times.csv", header=True)
 
-        for activity in self.projects_log:
-            project_completion = "NO" if activity.end_time == 0 else "YES"
-            project_data.append([
-                activity.stage, activity.software_house_id, activity.id, activity.start_time,
-                activity.end_time, activity.duration, activity.project_scale, project_completion
-            ])
+        post_optimization_project_df = self.projects_log[self.projects_log['Stage'] == 'post-optimization']
+        post_optimization_duration_stats_by_scale = post_optimization_project_df.groupby('Project Scale')['Duration'].agg(['min', 'max', 'mean'])
+        print("Post-Optimization Project Duration Statistics by Project Scale:")
+        print(post_optimization_duration_stats_by_scale)
+        post_optimization_duration_stats_by_scale.to_csv("table9c_report_on_project_completion_times.csv", header=True)
 
-        for activity in self.resources_log:
-            resources_data.append([
-                activity.stage, activity.type_of_resource, activity.software_house_id, activity.project_id, activity.resources_available,
-                activity.action, activity.timestamp, activity.number_of_resources_request, activity.project_scale
-            ])
+        post_optimization_duration_stats = post_optimization_project_df['Duration'].agg(['min', 'max', 'mean'])
+        print("Post-Optimization Project Duration Statistics Across All Project Scales:")
+        print(post_optimization_duration_stats)
+        post_optimization_duration_stats.to_csv("table9d_report_on_project_completion_times.csv", header=True)
 
-        for activity in self.phases_log:
-            phases_data.append([
-                activity.stage, activity.phase, activity.phase_start, activity.phase_end, activity.phase_duration, activity.software_house_id,
-                activity.project_id, activity.project_scale, activity.timestamp, activity.resources_obtain_time
-            ])
+    def table10_report_on_phase_completion_times_by_phase(self):
+        pre_optimization_phases = self.phases_log[self.phases_log["Stage"] == "pre-optimization"]
+        phase_stats = pre_optimization_phases.groupby(["Project Scale", "Phase"])["Phase Duration"].agg(["min", "max", "mean"])
+        print("Phase Duration Statistics (Pre-Optimization):\n")
+        print(phase_stats)
+        phase_stats.to_csv("table10_report_on_phase_completion_times_by_phase.csv")
 
-        for activity in self.failures_log:
-            failures_data.append([
-                activity.stage, activity.current_phase, activity.fail_to_phase, activity.software_house_id, activity.project_id,
-                activity.timestamp, activity.project_scale
-            ])
+        post_optimization_phases = self.phases_log[self.phases_log["Stage"] == "post-optimization"]
+        phase_stats2 = post_optimization_phases.groupby(["Project Scale", "Phase"])["Phase Duration"].agg(["min", "max", "mean"])
+        print("Phase Duration Statistics (Post-Optimization):\n")
+        print(phase_stats2)
+        phase_stats2.to_csv("table10_report_on_phase_completion_times_by_phase.csv")
 
-        optimization_df = pd.DataFrame(optimization_data, columns=[
-            "Stage", "Phase", "Previous Mean Wait Time", "Iteration", "Original Number of Resources", "Number of Resources"
-        ])
-
-        project_df = pd.DataFrame(project_data, columns=[
-            "Stage", "Iteration", "Project Id", "Project Start Time", "Project End Time", "Duration", "Project Scale", "Project Completion"
-        ])
-
-        resources_df = pd.DataFrame(resources_data, columns=[
-            "Stage", "Resource Type", "Iteration", "Project Id", "Resources Available", "Action", "Timestamp",
-            "Resources Requested", "Project Scale"
-        ])
-
-        phases_df = pd.DataFrame(phases_data, columns=[
-            "Stage", "Phase", "Phase Start", "Phase End", "Phase Duration", "Iteration", "Project Id", "Project Scale",
-            "Timestamp", "Wait Time to Obtain Resources"
-        ])
-
-        failures_df = pd.DataFrame(failures_data, columns=[
-            "Stage", "Current Phase", "Fail to Phase", "Iteration", "Project Id", "Timestamp", "Project Scale"
-        ])
-
-        project_df.to_csv("project_data.csv", index=False, mode='w')
-        resources_df.to_csv("resources_report.csv", index=False, mode='w')
-        phases_df.to_csv("phases_report.csv", index=False, mode='w')
-        failures_df.to_csv("failures_report.csv", index=False, mode='w')
-        optimization_df.to_csv("optimization.csv", index=False, mode='w')
+    def _create_and_save_dataframe(self, data, filename, columns):
+        df = pd.DataFrame(data, columns=columns)
+        print(f"Generated {filename} with columns: {columns}")
+        df.to_csv(filename, index=False)

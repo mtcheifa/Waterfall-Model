@@ -1,9 +1,9 @@
-import pandas as pd
-import matplotlib.pyplot as plt
-import seaborn as sns
+import sys
+from matplotlib import pyplot as plt
 import numpy as np
+import pandas as pd
 from IPython.display import display
-
+import seaborn as sns
 
 class FailureReport:
     def __init__(self, phases_df, failures_df):
@@ -16,9 +16,7 @@ class FailureReport:
         phase_failure_table = failure_counts.merge(total_phases, left_on=['Stage', 'Project Scale', 'Current Phase'], right_on=['Stage', 'Project Scale', 'Phase'], how='left').fillna(0)
         phase_failure_table = phase_failure_table[phase_failure_table['Stage'] != 'optimizing']
         phase_failure_table['Percentage'] = (phase_failure_table['Phase Failures'] / phase_failure_table['Total Phases']) * 100
-        print("Phase Failure Table:")
-        display(phase_failure_table)
-        phase_failure_table.to_csv("table12_part1_failure_report.csv", index=False)
+        self._display_and_save(phase_failure_table, "table12_part1_failure_report.csv", "Phase Failure Table")
 
     def table12_part2_failure_report(self):
         filtered_failures_df = self.failures_df[self.failures_df['Stage'] != 'optimizing']
@@ -28,8 +26,7 @@ class FailureReport:
         report_table = pd.merge(failure_counts, phase_counts, on=['Stage', 'Project Scale'], how='outer')
         report_table['Phase Failure Count'].fillna(0, inplace=True)
         report_table['Percentage'] = (report_table['Phase Failure Count'] / report_table['Total Phase Count']) * 100
-        display(report_table)
-        report_table.to_csv("table12_part2_failure_report.csv", index=False)
+        self._display_and_save(report_table, "table12_part2_failure_report.csv", "Report Table")
 
     def table12_part3_failure_report(self):
         phase_failures_table = pd.pivot_table(self.failures_df, index=['Stage', 'Current Phase'], values='Iteration', aggfunc='count')
@@ -84,3 +81,8 @@ class FailureReport:
         plt.ylabel('Count')
         plt.legend(title='Project Scale')
         plt.show()
+
+    def _display_and_save(self, df, filename, table_name):
+        print(f"{table_name}:")
+        display(df)
+        df.to_csv(filename, index=False)

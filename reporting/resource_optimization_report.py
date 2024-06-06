@@ -6,10 +6,7 @@ class ResourceOptimizationReport:
 
     def table8_optimized_resources_report(self):
         grouped_data = self.optimization_df.groupby("Phase")
-        phase_names = []
-        original_resources = []
-        final_resources = []
-        steps_to_optimum = []
+        phase_names, original_resources, final_resources, steps_to_optimum = [], [], [], []
         for phase, group in grouped_data:
             phase_names.append(phase)
             original_resources.append(group["Original Number of Resources"].iloc[0])
@@ -21,5 +18,9 @@ class ResourceOptimizationReport:
             "Final Resources": final_resources,
             "Steps to Optimum": steps_to_optimum
         })
-        print(report_df)
-        report_df.to_csv('table8_optimized_resources_report.csv', index=False)
+        self._display_and_save(report_df, "table8_optimized_resources_report.csv", "Optimized Resources Report")
+
+    def _display_and_save(self, df, filename, report_name):
+        print(f"{report_name}:")
+        print(df)
+        df.to_csv(filename, index=False)
